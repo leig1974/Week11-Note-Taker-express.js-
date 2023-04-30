@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
-const { readAndAppend, readFromFile } = require('../helpers/fsUtils');
+const { readAndAppend, readFromFile, deleteNote } = require('../helpers/fsUtils');
 const fs = require('fs');
 
 // GET Route for retrieving diagnostic information
@@ -34,15 +34,22 @@ router.post('/notes', (req, res) => {
   }
 });
 
-router.delete('/notes/:id', (req, res) => {
-  fs.readFile('./db/db.json').then((data) => {
-    let parsedData = JSON.parse(data)
-    parsedData.filter(note => note.id != req.params.id)
-        fs.writeFile('db/db.json', JSON.stringify(parsedData), (err) => {
-      if (err) throw err;
-      console.log('The file has been saved!');
-      res.redirect('/notes')
-    });
-  })
+// router.delete('/notes/:id', (req, res) => {
+//   deleteNote(req.params.id, './db/db.json');
+//     console.log(req.params.id);
+//     res.json(`Diagnostic information added 🔧`);
+// });
+router.delete("/notes/:id", (req, res) => {
+	fs.readFile("db/db.json", (err, data) => {
+		if (err) throw err;
+		let json = JSON.parse(data);
+		let notes = json.filter((note) => note.id !== req.params.id);
+		console.log(notes);
+		fs.writeFile("db/db.json", JSON.stringify(notes), function (err) {
+			if (err) throw err;
+			res.redirect("/notes");
+		});
+	});
 });
+
 module.exports = router;
